@@ -6,7 +6,7 @@ def get_admin_by_email(email):
     cur = conn.cursor(dictionary=True)
 
 
-    cur.execute("SELECT id, name, email, password_hash FROM admins WHERE email = %s", (email,))
+    cur.execute("SELECT id, name, email, password_hash FROM users WHERE email = %s AND role = 'admin'", (email,))
     admin = cur.fetchone()
 
     cur.close()
@@ -20,8 +20,8 @@ def register_admin(name, email, hashed_password):
     cur = conn.cursor()
 
     cur.execute("""
-        INSERT INTO admins (name, email, password_hash)
-        VALUES (%s, %s, %s)
+        INSERT INTO users (name, email, password_hash, role)
+        VALUES (%s, %s, %s, 'admin')
     """, (name, email, hashed_password))
 
     conn.commit()
