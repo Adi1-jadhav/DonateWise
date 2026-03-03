@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Make a Donation | DonateWise</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="Donate your unused items to NGOs near you via DonateWise — AI-powered, real-time, and impactful.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+            --green: #10b981;
+            --orange: #f59e0b;
+            --rose: #f43f5e;
+            --dark: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f1f5f9;
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* LAYOUT */
+        .page-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 5rem;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .page-wrap {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* MAIN CARD */
+        .form-card {
+            background: white;
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .form-card-header {
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
+            padding: 2.5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-card-header::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.3), transparent 70%);
+            right: -50px;
+            top: -80px;
+            border-radius: 50%;
+        }
+
+        .form-card-header h2 {
+            font-size: 2rem;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin: 0 0 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-card-header p {
+            color: rgba(255, 255, 255, 0.6);
+            margin: 0;
+            font-size: 0.95rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* STEP PROGRESS */
+        .step-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            padding: 0.5rem;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step-dot {
+            flex: 1;
+            text-align: center;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 0.5rem;
+            border-radius: 100px;
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s;
+        }
+
+        .step-dot.active {
+            background: white;
+            color: var(--primary);
+        }
+
+        .step-dot.done {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* FORM BODY */
+        .form-body {
+            padding: 2.5rem;
+        }
+
+        /* SECTION TITLE */
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* IMAGE UPLOAD */
+        .upload-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover,
+        .upload-zone.drag-over {
+            border-color: var(--primary);
+            background: #ede9fe;
+        }
+
+        .upload-zone.has-image {
+            border-color: var(--green);
+            background: #f0fdf4;
+            padding: 0;
+        }
+
+        #imgPreview {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            border-radius: 18px;
+            display: none;
+        }
+
+        .upload-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--primary);
+            margin: 0 auto 1.25rem;
+            transition: transform 0.3s;
+        }
+
+        .upload-zone:hover .upload-icon {
+            transform: scale(1.1) rotate(-5deg);
+        }
+
+        /* FORM FIELDS */
+        .field-wrap {
+            margin-bottom: 1.5rem;
+        }
+
+        .field-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .field-input {
+            width: 100%;
+            background: #f8fafc;
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 0.875rem 1rem;
+            font-size: 0.95rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 500;
+            color: var(--dark);
+            outline: none;
+            transition: all 0.25s;
+        }
+
+        .field-input:focus {
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.08);
+        }
+
+        .field-input::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        textarea.field-input {
+            resize: none;
+        }
+
+        /* AI PANEL */
+        .ai-panel {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border-radius: 20px;
+            padding: 1.75rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeSlideIn 0.4s ease-out;
+        }
+
+        .ai-panel.visible {
+            display: block;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 0.25rem;
+        }
+
+        .ai-value {
+            font-size: 1.4rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #38bdf8;
+        }
+
+        .ai-confidence-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 1.25rem;
+        }
+
+        .ai-confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            border-radius: 100px;
+            transition: width 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            width: 0%;
+        }
+
+        .ai-thinking {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .ai-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #818cf8;
+            animation: ai-bounce 1.2s infinite;
+        }
+
+        .ai-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .ai-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes ai-bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+
+        /* PICKUP TOGGLE */
+        .pickup-toggle {
+            border: 2px solid var(--border);
+            border-radius: 18px;
+            padding: 1.25rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: #fafafa;
+            margin-bottom: 1.5rem;
+        }
+
+        .pickup-toggle.on {
+            border-color: var(--green);
+            background: #f0fdf4;
+        }
+
+        /* SUBMIT BUTTON */
+        .btn-submit {
+            width: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1.25rem;
+            border-radius: 18px;
+            font-weight: 900;
+            font-size: 1.1rem;
+            box-shadow: 0 16px 40px -10px rgba(79, 70, 229, 0.5);
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 24px 50px -10px rgba(79, 70, 229, 0.55);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* SIDE PANEL */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .tip-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 1.75rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .tip-card-title {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 1.25rem;
+        }
+
+        .tip-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.88rem;
+        }
+
+        .tip-item:last-child {
+            border: none;
+            padding-bottom: 0;
+        }
+
+        .tip-emoji {
+            font-size: 1.25rem;
+            width: 36px;
+            height: 36px;
+            background: #f8fafc;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* CATEGORY CHIPS */
+        .cat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .cat-chip {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #f1f5f9;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .cat-chip:hover,
+        .cat-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* IMPACT PREVIEW CARD */
+        .impact-preview {
+            background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
+            border-radius: 24px;
+            padding: 2rem;
+            color: white;
+        }
+
+        .impact-number {
+            font-size: 3.5rem;
+            font-weight: 900;
+            letter-spacing: -3px;
+            line-height: 1;
+        }
+
+        /* ERROR */
+        .error-msg {
+            background: #fee2e2;
+            color: #b91c1c;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: none;
+            margin-bottom: 1rem;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .error-msg.visible {
+            display: flex;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{{ url_for('main.home') }}"
+                style="font-size:1.4rem; letter-spacing:-0.5px;">
+                <i class="bi bi-box2-heart-fill"></i> DonateWise
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="{{ url_for('main.home') }}"
+                    class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-muted"><i
+                        class="bi bi-house me-1"></i>Home</a>
+                <a href="{{ url_for('main.history') }}"
+                    class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-muted"><i
+                        class="bi bi-clock-history me-1"></i>History</a>
+                <a href="{{ url_for('main.profile') }}"
+                    class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-muted"><i
+                        class="bi bi-person-circle me-1"></i>Profile</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-wrap">
+
+        <!-- ── MAIN FORM ── -->
+        <div>
+            <div class="form-card">
+                <div class="form-card-header">
+                    <h2><i class="bi bi-gift-fill me-2" style="color: #818cf8;"></i>Start Your Donation</h2>
+                    <p>Your items will be AI-analyzed, matched to a verified NGO, and tracked to delivery.</p>
+                    <div class="step-bar">
+                        <div class="step-dot active" id="s1">📦 Item Details</div>
+                        <div class="step-dot" id="s2">📍 Pickup Info</div>
+                        <div class="step-dot" id="s3">✅ Confirm</div>
+                    </div>
+                </div>
+
+                <div class="form-body">
+                    <form method="POST" enctype="multipart/form-data" action="{{ url_for('main.donate') }}"
+                        id="donateForm">
+
+                        <!-- PHOTO -->
+                        <div class="section-label"><i class="bi bi-camera-fill text-primary"></i> Item Photo</div>
+                        <div class="upload-zone mb-4" id="uploadZone"
+                            onclick="document.getElementById('imageInput').click()">
+                            <div id="uploadPrompt">
+                                <div class="upload-icon"><i class="bi bi-cloud-arrow-up"></i></div>
+                                <h5 class="fw-bold mb-1" style="font-size:1rem;">Click or drag & drop a photo</h5>
+                                <p class="text-muted small mb-2">PNG, JPG — Our AI will analyze the item from the image
+                                </p>
+                                <span
+                                    style="background:#ede9fe; color:var(--primary); font-size:0.75rem; font-weight:700; padding:0.3rem 0.875rem; border-radius:100px; letter-spacing:0.5px;">OPTIONAL
+                                    IF TEXT PROVIDED</span>
+                            </div>
+                            <img id="imgPreview" src="#" alt="Preview">
+                            <input type="file" name="image" id="imageInput" accept=".jpg,.jpeg,.png" hidden>
+                        </div>
+
+                        <!-- TITLE -->
+                        <div class="section-label"><i class="bi bi-pencil-square text-primary"></i> Item Details</div>
+                        <div class="field-wrap">
+                            <div class="field-label"><i class="bi bi-type"></i> Item Title <span
+                                    class="text-muted fw-normal ms-1">(optional if photo given)</span></div>
+                            <input type="text" name="title" id="titleInput" class="field-input"
+                                placeholder="e.g. School bag, winter clothes, rice bags...">
+                        </div>
+
+                        <div class="field-wrap">
+                            <div class="field-label"><i class="bi bi-text-paragraph"></i> Description</div>
+                            <textarea name="description" id="descInput" class="field-input" rows="3"
+                                placeholder="Describe the item condition, quantity details, or anything the NGO should know..."></textarea>
+                        </div>
+
+                        <!-- AI PANEL -->
+                        <div class="ai-panel" id="aiPanel">
+                            <div class="d-flex align-items-center gap-2 mb-4">
+                                <i class="bi bi-stars" style="color: #f59e0b; font-size: 1.1rem;"></i>
+                                <span
+                                    style="font-size:0.7rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.5);">Live
+                                    AI Analysis</span>
+                                <div class="ai-thinking ms-auto d-none" id="aiLoader">
+                                    <div class="ai-dot"></div>
+                                    <div class="ai-dot"></div>
+                                    <div class="ai-dot"></div>
+                                </div>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-7">
+                                    <div class="ai-label">Predicted Category</div>
+                                    <div class="ai-value" id="aiCat">—</div>
+                                </div>
+                                <div class="col-5 text-end">
+                                    <div class="ai-label">Condition</div>
+                                    <span id="aiCond" class="badge rounded-pill px-3 py-2 bg-secondary fw-bold"
+                                        style="font-size:0.8rem;">—</span>
+                                </div>
+                            </div>
+                            <div class="ai-confidence-bar mt-3">
+                                <div class="ai-confidence-fill" id="aiBar"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span style="font-size:0.7rem; color:rgba(255,255,255,0.35);">Confidence Score</span>
+                                <span style="font-size:0.7rem; color:#818cf8; font-weight:700;"
+                                    id="aiPct">Analyzing...</span>
+                            </div>
+                        </div>
+
+                        <!-- LOCATION & QUANTITY -->
+                        <div class="section-label"><i class="bi bi-geo-alt-fill text-primary"></i> Logistics</div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-7">
+                                <div class="field-label"><i class="bi bi-map"></i> Pickup Location</div>
+                                <input type="text" name="location" class="field-input"
+                                    placeholder="Area, City (e.g. Kothrud, Pune)" required>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="field-label"><i class="bi bi-hash"></i> Quantity</div>
+                                <input type="number" name="quantity" class="field-input" min="1" value="1" required>
+                            </div>
+                        </div>
+
+                        <!-- PICKUP ASSIST TOGGLE -->
+                        <div class="pickup-toggle" id="pickupToggle" onclick="togglePickup()">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="fw-bold" style="font-size: 0.95rem;"><i
+                                            class="bi bi-truck me-2 text-primary"></i>Request Doorstep Pickup</div>
+                                    <div class="text-muted small mt-1">Need an NGO volunteer to collect from your home?
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="pickupCheck"
+                                        name="pickup_required" style="width:3rem; height:1.5rem; cursor:pointer;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- PICKUP TIME (conditional) -->
+                        <div id="pickupTimeSlot" style="display: none;" class="field-wrap">
+                            <div class="field-label"><i class="bi bi-calendar-event"></i> Preferred Pickup Time</div>
+                            <input type="datetime-local" name="pickup_time" class="field-input">
+                        </div>
+
+                        <!-- ERROR -->
+                        <div class="error-msg" id="errorMsg">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            Please add either a <strong>photo</strong> or fill in the <strong>title &
+                                description</strong> fields.
+                        </div>
+
+                        <!-- SUBMIT -->
+                        <button type="submit" class="btn-submit" onclick="return validateForm()">
+                            <i class="bi bi-heart-fill"></i> Confirm My Donation
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── SIDE PANEL ── -->
+        <div class="side-panel">
+
+            <!-- IMPACT PREVIEW -->
+            <div class="impact-preview">
+                <div
+                    style="font-size:0.7rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.5); margin-bottom:0.5rem;">
+                    Your Potential Impact</div>
+                <div class="impact-number">3–8</div>
+                <div style="font-weight:600; color:rgba(255,255,255,0.7); margin-top:0.35rem; font-size:0.95rem;">lives
+                    positively affected</div>
+                <div class="mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.2);">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <i class="bi bi-robot" style="font-size:1.1rem;"></i>
+                        <span style="font-size:0.85rem; color:rgba(255,255,255,0.7);">AI will categorize & match
+                            instantly</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <i class="bi bi-shield-check" style="font-size:1.1rem;"></i>
+                        <span style="font-size:0.85rem; color:rgba(255,255,255,0.7);">Verified NGO picks up within 48
+                            hrs</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="bi bi-award-fill" style="font-size:1.1rem;"></i>
+                        <span style="font-size:0.85rem; color:rgba(255,255,255,0.7);">Receive an Impact
+                            Certificate</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORY CHIPS -->
+            <div class="tip-card">
+                <div class="tip-card-title"><i class="bi bi-grid-3x3-gap-fill me-1"></i> Popular Categories</div>
+                <div class="cat-chips">
+                    <div class="cat-chip" onclick="setCategory(this, 'school bag')">🎒 School Bag</div>
+                    <div class="cat-chip" onclick="setCategory(this, 'clothes')">👕 Clothes</div>
+                    <div class="cat-chip" onclick="setCategory(this, 'food')">🍱 Food</div>
+                    <div class="cat-chip" onclick="setCategory(this, 'books')">📚 Books</div>
+                    <div class="cat-chip" onclick="setCategory(this, 'medicines')">💊 Medicines</div>
+                    <div class="cat-chip" onclick="setCategory(this, 'blankets')">🛏 Blankets</div>
+                    <div class="cat-chip" onclick="setCategory(this, 'toys')">🧸 Toys</div>
+                    <div class="cat-chip" onclick="setCategory(this, 'electronics')">📱 Electronics</div>
+                </div>
+            </div>
+
+            <!-- TIPS -->
+            <div class="tip-card">
+                <div class="tip-card-title"><i class="bi bi-lightbulb-fill me-1"></i> Tips for a Fast Match</div>
+                <div class="tip-item">
+                    <div class="tip-emoji">📸</div>
+                    <div><strong>Add a photo</strong> — AI can predict the category in 1 second with high accuracy.
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-emoji">📝</div>
+                    <div><strong>Be specific</strong> — "10 school bags, good condition" matches 3× faster than "bags".
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-emoji">📍</div>
+                    <div><strong>Exact area</strong> — Mention your neighbourhood for NGOs to find you quickly.</div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-emoji">🚚</div>
+                    <div><strong>Pickup assist</strong> — Enable it if you can't travel to the NGO drop-off point.</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ── IMAGE UPLOAD & DRAG-DROP
+        const uploadZone = document.getElementById('uploadZone');
+        const imageInput = document.getElementById('imageInput');
+        const imgPreview = document.getElementById('imgPreview');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+
+        imageInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+        uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+        uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imgPreview.src = e.target.result;
+                imgPreview.style.display = 'block';
+                uploadPrompt.style.display = 'none';
+                uploadZone.classList.add('has-image');
+                document.getElementById('errorMsg').classList.remove('visible');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ── LIVE AI PREDICTION
+        let aiTimer;
+        const titleInput = document.getElementById('titleInput');
+        const descInput = document.getElementById('descInput');
+
+        [titleInput, descInput].forEach(el => el.addEventListener('input', () => {
+            clearTimeout(aiTimer);
+            aiTimer = setTimeout(runAI, 700);
+        }));
+
+        async function runAI() {
+            const title = titleInput.value.trim();
+            const desc = descInput.value.trim();
+            if (title.length < 3 && desc.length < 4) {
+                document.getElementById('aiPanel').classList.remove('visible');
+                return;
+            }
+            const panel = document.getElementById('aiPanel');
+            panel.classList.add('visible');
+            document.getElementById('aiLoader').classList.remove('d-none');
+
+            try {
+                const res = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, description: desc })
+                });
+                const d = await res.json();
+                document.getElementById('aiLoader').classList.add('d-none');
+                document.getElementById('aiCat').textContent = d.category || '—';
+                const cond = document.getElementById('aiCond');
+                cond.textContent = d.condition || '—';
+                const condColors = { 'New': 'bg-success', 'Usable': 'bg-info', 'Worn': 'bg-warning text-dark' };
+                cond.className = 'badge rounded-pill px-3 py-2 fw-bold ' + (condColors[d.condition] || 'bg-secondary');
+                document.getElementById('aiBar').style.width = (d.confidence || 0) + '%';
+                document.getElementById('aiPct').textContent = (d.confidence || 0) + '% Confidence';
+            } catch (e) {
+                document.getElementById('aiLoader').classList.add('d-none');
+            }
+        }
+
+        // ── CATEGORY CHIP CLICK
+        function setCategory(el, text) {
+            document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            if (!titleInput.value.trim()) {
+                titleInput.value = text.charAt(0).toUpperCase() + text.slice(1);
+                titleInput.dispatchEvent(new Event('input'));
+            }
+        }
+
+        // ── PICKUP TOGGLE
+        function togglePickup() {
+            const chk = document.getElementById('pickupCheck');
+            chk.checked = !chk.checked;
+            const slot = document.getElementById('pickupTimeSlot');
+            const toggle = document.getElementById('pickupToggle');
+            slot.style.display = chk.checked ? 'block' : 'none';
+            toggle.classList.toggle('on', chk.checked);
+        }
+
+        // ── VALIDATION
+        function validateForm() {
+            const hasImg = imageInput.files.length > 0;
+            const hasTitle = titleInput.value.trim().length > 0;
+            const hasDesc = descInput.value.trim().length > 0;
+            if (!hasImg && (!hasTitle || !hasDesc)) {
+                const e = document.getElementById('errorMsg');
+                e.classList.add('visible');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                return false;
+            }
+            return true;
+        }
+
+        // ── STEP PROGRESS on scroll/interact
+        titleInput.addEventListener('focus', () => setStep(1));
+        document.querySelector('[name=location]').addEventListener('focus', () => setStep(2));
+        document.querySelector('.btn-submit').addEventListener('mouseover', () => setStep(3));
+
+        function setStep(n) {
+            ['s1', 's2', 's3'].forEach((id, i) => {
+                const el = document.getElementById(id);
+                el.className = 'step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+            });
+        }
+    </script>
+</body>
+
+</html>

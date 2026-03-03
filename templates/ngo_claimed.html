@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Claimed Donations | DonateWise NGO</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+
+<body class="bg-light">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">DonateWise NGO</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.ngo_dashboard') }}">Dashboard</a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.ngo_profile') }}">Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-5">
+            <h2 class="fw-black m-0">📜 Claimed Donations</h2>
+            <a href="{{ url_for('main.ngo_dashboard') }}" class="btn btn-outline-primary rounded-pill px-4 fw-bold">Find
+                More</a>
+        </div>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-primary border-0 shadow-sm text-center fw-bold rounded-pill mb-5">
+            <i class="bi bi-info-circle-fill me-2"></i>{{ messages[0] }}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            {% if claimed %}
+            {% for d in claimed %}
+            <div class="col-md-6 mb-4">
+                <div class="card border-0 shadow-sm rounded-4 h-100 p-2 overflow-hidden">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0">{{ d.title }}</h5>
+                            <span
+                                class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 rounded-pill">{{
+                                d.predicted_category }}</span>
+                        </div>
+
+                        <div class="row small text-muted mb-4 border-bottom pb-3">
+                            <div class="col-6"><i class="bi bi-box-seam me-1"></i>Qty: {{ d.quantity }}</div>
+                            <div class="col-6 text-end"><i class="bi bi-clock me-1"></i>{{ d.pickup_status }}</div>
+                        </div>
+
+                        {% if d.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ d.image_filename) }}"
+                            class="img-fluid rounded-3 mb-4 shadow-sm border"
+                            style="height:150px; width:100%; object-fit:cover;">
+                        {% endif %}
+
+                        <div class="d-flex flex-wrap gap-2 mt-auto align-items-center">
+                            {% if d.pickup_status == 'Approved' or d.pickup_status == 'pending' or d.pickup_status ==
+                            'Pending' %}
+                            <form action="{{ url_for('main.dispatch_donation_route') }}" method="POST"
+                                class="flex-grow-1">
+                                <input type="hidden" name="donation_id" value="{{ d.id }}">
+                                <button type="submit" class="btn btn-primary w-100 fw-bold rounded-pill shadow-sm">
+                                    <i class="bi bi-truck me-2"></i> Start Journey
+                                </button>
+                            </form>
+                            {% elif d.pickup_status == 'Dispatched' %}
+                            <form action="{{ url_for('main.fulfill_donation_route') }}" method="POST"
+                                class="flex-grow-1">
+                                <input type="hidden" name="donation_id" value="{{ d.id }}">
+                                <button type="submit" class="btn btn-success w-100 fw-bold rounded-pill shadow-sm">
+                                    <i class="bi bi-check-circle me-2"></i> Mark as Delivered
+                                </button>
+                            </form>
+                            {% else %}
+                            <div class="alert alert-success w-100 text-center py-2 m-0 rounded-pill fw-bold border-0">
+                                <i class="bi bi-balloon-heart-fill me-2"></i> Mission Accomplished
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-box-seam display-1 opacity-25"></i>
+                <p class="text-muted mt-3">No claims yet. Head to the dashboard to find donations!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>My Donation Journey | DonateWise</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --green: #10b981;
+            --orange: #f59e0b;
+            --rose: #f43f5e;
+            --dark: #0f172a;
+            --muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f1f5f9;
+            color: var(--dark);
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        /* HERO HEADER */
+        .page-hero {
+            background: linear-gradient(135deg, var(--dark) 0%, #1e293b 100%);
+            color: white;
+            padding: 60px 0 90px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-hero::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.2), transparent 70%);
+            right: -100px;
+            top: -100px;
+            border-radius: 50%;
+        }
+
+        .page-hero h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 0.5rem;
+        }
+
+        /* STAT PILLS */
+        .stats-float {
+            position: relative;
+            z-index: 10;
+            margin-top: -50px;
+            margin-bottom: 3rem;
+        }
+
+        .stat-pill {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-pill:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-num {
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            line-height: 1;
+        }
+
+        .stat-desc {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin-top: 0.35rem;
+        }
+
+        /* DONATION CARDS */
+        .donation-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .donation-card:hover {
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.09);
+            transform: translateY(-3px);
+        }
+
+        .card-top-bar {
+            height: 4px;
+        }
+
+        .card-content {
+            padding: 1.75rem;
+        }
+
+        /* STATUS LABELS */
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 0.35rem 0.875rem;
+            border-radius: 100px;
+        }
+
+        .chip-fulfilled {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .chip-dispatched {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .chip-claimed {
+            background: #ede9fe;
+            color: #4c1d95;
+        }
+
+        .chip-pending {
+            background: #fef3c7;
+            color: #78350f;
+        }
+
+        /* ITEM THUMBNAIL */
+        .item-thumb {
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .item-thumb-placeholder {
+            width: 90px;
+            height: 90px;
+            border-radius: 16px;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        /* JOURNEY STEPS */
+        .journey {
+            display: flex;
+            align-items: flex-start;
+            gap: 0;
+            margin: 1.75rem 0 0;
+            position: relative;
+        }
+
+        .journey::before {
+            content: '';
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            right: 18px;
+            height: 2px;
+            background: var(--border);
+            z-index: 0;
+        }
+
+        .j-step {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .j-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            border: 2px solid var(--border);
+            background: white;
+            color: #cbd5e1;
+            transition: all 0.4s;
+            position: relative;
+        }
+
+        .j-step.done .j-circle {
+            background: var(--green);
+            border-color: var(--green);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+        }
+
+        .j-step.active .j-circle {
+            background: white;
+            border-color: var(--primary);
+            border-width: 3px;
+            color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+            animation: pulse-step 2s infinite;
+        }
+
+        @keyframes pulse-step {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(79, 70, 229, 0.06);
+            }
+        }
+
+        .j-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            margin-top: 0.6rem;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .j-step.done .j-label {
+            color: var(--green);
+        }
+
+        .j-step.active .j-label {
+            color: var(--primary);
+        }
+
+        /* NGO INFO BAR */
+        .ngo-bar {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            margin-top: 1.5rem;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        /* LIVE ALERT */
+        .live-alert {
+            background: linear-gradient(135deg, rgba(79, 70, 229, 0.06), rgba(6, 182, 212, 0.06));
+            border: 1px solid rgba(79, 70, 229, 0.15);
+            border-radius: 16px;
+            padding: 1rem 1.25rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* CERTIFICATE BUTTON */
+        .btn-cert {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 100px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35);
+            animation: gold-glow 2.5s infinite;
+        }
+
+        @keyframes gold-glow {
+
+            0%,
+            100% {
+                box-shadow: 0 8px 20px rgba(245, 158, 11, 0.35);
+            }
+
+            50% {
+                box-shadow: 0 12px 30px rgba(245, 158, 11, 0.6);
+            }
+        }
+
+        .btn-cert:hover {
+            transform: translateY(-2px);
+            color: white;
+        }
+
+        /* TRACK BUTTON */
+        .btn-track {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.625rem 1.5rem;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-track:hover {
+            background: var(--dark);
+            transform: translateY(-1px);
+        }
+
+        /* EMPTY STATE */
+        .empty-state {
+            background: white;
+            border-radius: 28px;
+            border: 1px solid var(--border);
+            padding: 5rem 2rem;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        /* MAP MODAL */
+        #trackMap {
+            height: 380px;
+            border-radius: 20px;
+        }
+
+        .spinner-live {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: inline-block;
+            animation: blink 1s infinite;
+            margin-right: 4px;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.25rem 0.625rem;
+            border-radius: 100px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="{{ url_for('main.home') }}"
+                style="font-size:1.4rem; letter-spacing:-0.5px;">
+                <i class="bi bi-box2-heart-fill"></i> DonateWise
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-2">
+                <a href="{{ url_for('main.home') }}"
+                    class="btn btn-sm btn-light rounded-pill px-3 fw-semibold text-muted"><i
+                        class="bi bi-house me-1"></i>Home</a>
+                <a href="{{ url_for('main.donate') }}" class="btn btn-sm btn-primary rounded-pill px-3 fw-bold"><i
+                        class="bi bi-plus me-1"></i>New Donation</a>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-sm rounded-pill px-3 fw-semibold"
+                    style="background:#fff1f2; color:#f43f5e; border:1px solid #fecdd3;"><i
+                        class="bi bi-box-arrow-right me-1"></i>Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <div class="page-hero">
+        <div class="container position-relative" style="z-index:1;">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div
+                    style="width:44px; height:44px; background:rgba(255,255,255,0.1); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:1.3rem;">
+                    🧭</div>
+                <div
+                    style="font-size:0.7rem; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,0.4); text-transform:uppercase;">
+                    Donation History</div>
+            </div>
+            <h1>Your Kindness Journey</h1>
+            <p style="color:rgba(255,255,255,0.5); font-size:1rem;">Every item you've shared, tracked from your hands to
+                someone's heart.</p>
+        </div>
+    </div>
+
+    <div class="container pb-5">
+
+        <!-- STATS FLOAT -->
+        <div class="stats-float">
+            <div class="row g-3">
+                <div class="col-4">
+                    <div class="stat-pill">
+                        <div class="stat-num" style="color: var(--primary);">{{ stats.total }}</div>
+                        <div class="stat-desc">Total Donated</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-pill">
+                        <div class="stat-num" style="color: var(--green);">{{ stats.claimed }}</div>
+                        <div class="stat-desc">Fulfilled</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="stat-pill">
+                        <div class="stat-num" style="color: var(--orange);">{{ stats.pending }}</div>
+                        <div class="stat-desc">Awaiting NGO</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HISTORY ITEMS -->
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                {% if history %}
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>All Donations</h5>
+                    <a href="{{ url_for('main.donate') }}" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold"><i
+                            class="bi bi-plus me-1"></i>Add New</a>
+                </div>
+
+                {% for item in history %}
+                {% set status = item.pickup_status %}
+                <div class="donation-card">
+                    <!-- Top color bar by status -->
+                    <div class="card-top-bar"
+                        style="background: {% if status == 'Fulfilled' %}linear-gradient(90deg, #10b981, #34d399){% elif status == 'Dispatched' %}linear-gradient(90deg, #4f46e5, #818cf8){% elif item.claimed_by %}linear-gradient(90deg, #8b5cf6, #a78bfa){% else %}linear-gradient(90deg, #f59e0b, #fbbf24){% endif %};">
+                    </div>
+
+                    <div class="card-content">
+                        <!-- Header row -->
+                        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+                            <div>
+                                <span class="text-muted small fw-semibold">
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    {{ item.created_at.strftime('%d %b %Y, %I:%M %p') if item.created_at else 'Recently'
+                                    }}
+                                </span>
+                            </div>
+                            <span
+                                class="status-chip {% if status == 'Fulfilled' %}chip-fulfilled{% elif status == 'Dispatched' %}chip-dispatched{% elif item.claimed_by %}chip-claimed{% else %}chip-pending{% endif %}">
+                                {% if status == 'Fulfilled' %}<i class="bi bi-heart-fill"></i> Delivered
+                                {% elif status == 'Dispatched' %}<i class="bi bi-truck"></i> On the Way
+                                {% elif item.claimed_by %}<i class="bi bi-building-check"></i> NGO Claimed
+                                {% else %}<i class="bi bi-hourglass-split"></i> Awaiting NGO
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Item details row -->
+                        <div class="d-flex align-items-start gap-3">
+                            {% if item.image_filename %}
+                            <img src="{{ url_for('static', filename='uploads/' ~ item.image_filename) }}"
+                                class="item-thumb border">
+                            {% else %}
+                            <div class="item-thumb-placeholder">
+                                {% if item.predicted_category == 'Food' %}🍱
+                                {% elif item.predicted_category == 'Clothes' %}👕
+                                {% elif item.predicted_category == 'Books' %}📚
+                                {% elif item.predicted_category == 'Medical' %}💊
+                                {% elif item.predicted_category == 'Electronics' %}📱
+                                {% else %}📦{% endif %}
+                            </div>
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <h5 class="fw-bold mb-1" style="font-size:1.1rem;">{{ item.title }}</h5>
+                                {% if item.description %}
+                                <p class="text-muted small mb-2" style="line-height:1.5;">{{ item.description[:120] }}{%
+                                    if item.description|length > 120 %}…{% endif %}</p>
+                                {% endif %}
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span class="category-tag"><i class="bi bi-tag"></i>{{ item.predicted_category or
+                                        'Unknown' }}</span>
+                                    <span class="category-tag"><i class="bi bi-geo-alt"></i>{{ item.location }}</span>
+                                    <span class="category-tag"><i class="bi bi-stack"></i>{{ item.quantity }}
+                                        items</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LIVE ALERT for Dispatched -->
+                        {% if status == 'Dispatched' %}
+                        <div class="live-alert">
+                            <div
+                                style="width:36px; height:36px; background:var(--primary); border-radius:12px; display:flex; align-items:center; justify-content:center; color:white; flex-shrink:0; animation:pulse-step 2s infinite;">
+                                <i class="bi bi-truck"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold" style="font-size:0.9rem; color: var(--primary);"><span
+                                        class="spinner-live"></span>Live Pickup Active</div>
+                                <div class="text-muted small">The NGO has started their journey to your location.</div>
+                            </div>
+                            <button class="btn-track"
+                                onclick="openTracker('{{ item.location }}', '{{ item.ngo_location or '' }}', '{{ item.ngo_name or 'NGO' }}')">
+                                <i class="bi bi-broadcast"></i> Track
+                            </button>
+                        </div>
+                        {% endif %}
+
+                        <!-- DONATION JOURNEY TRACKER -->
+                        <div class="journey">
+                            {% set steps = [
+                            ('bi-send-fill', 'Submitted'),
+                            ('bi-robot', 'AI Verified'),
+                            ('bi-building-check', 'NGO Claimed'),
+                            ('bi-truck', 'Dispatched'),
+                            ('bi-heart-fill', 'Delivered')
+                            ] %}
+                            {% for icon, label in steps %}
+                            {% set idx = loop.index %}
+                            <div class="j-step
+                                {% if idx == 1 or idx == 2 %}done
+                                {% elif idx == 3 and item.claimed_by %}done
+                                {% elif idx == 3 %}active
+                                {% elif idx == 4 and (status == 'Dispatched' or status == 'Fulfilled') %}done
+                                {% elif idx == 4 and item.claimed_by %}active
+                                {% elif idx == 5 and status == 'Fulfilled' %}done
+                                {% elif idx == 5 and status == 'Dispatched' %}active
+                                {% endif %}">
+                                <div class="j-circle">
+                                    {% if (idx <= 2) or (idx==3 and item.claimed_by) or (idx==4 and
+                                        (status=='Dispatched' or status=='Fulfilled' )) or (idx==5 and
+                                        status=='Fulfilled' ) %} <i class="bi bi-check-lg"></i>
+                                        {% else %}
+                                        <i class="bi {{ icon }}"></i>
+                                        {% endif %}
+                                </div>
+                                <div class="j-label">{{ label }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- NGO INFO -->
+                        {% if item.ngo_name %}
+                        <div class="ngo-bar mt-3">
+                            <div>
+                                <div
+                                    style="font-size:0.65rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--muted);">
+                                    Handled by</div>
+                                <div class="fw-bold" style="color: var(--primary);"><i
+                                        class="bi bi-building me-1"></i>{{ item.ngo_name }}</div>
+                            </div>
+                            <div class="text-end">
+                                <div
+                                    style="font-size:0.65rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--muted);">
+                                    Pickup Time</div>
+                                <div class="fw-bold text-dark" style="font-size:0.9rem;"><i
+                                        class="bi bi-clock me-1"></i>{{ item.scheduled_time or 'Awaiting Update' }}
+                                </div>
+                            </div>
+
+                            {% if status == 'Fulfilled' %}
+                            <a href="{{ url_for('main.view_certificate', donation_id=item.id) }}" class="btn-cert">
+                                <i class="bi bi-patch-check-fill"></i> Claim Certificate
+                            </a>
+                            {% elif item.claimed_by %}
+                            <button class="btn-track"
+                                onclick="openTracker('{{ item.location }}', '{{ item.ngo_location or '' }}', '{{ item.ngo_name }}')">
+                                <i class="bi bi-geo-alt-fill"></i> Track Pickup
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% else %}
+                <!-- EMPTY STATE -->
+                <div class="empty-state">
+                    <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.3;">📭</div>
+                    <h3 class="fw-bold mb-2">No donations yet</h3>
+                    <p class="mb-4">Your kindness journey starts here. Make your first donation and watch it travel!</p>
+                    <a href="{{ url_for('main.donate') }}" class="btn btn-primary rounded-pill px-5 fw-bold py-3"
+                        style="font-size:1rem;">
+                        <i class="bi bi-gift-fill me-2"></i>Start Donating
+                    </a>
+                </div>
+                {% endif %}
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TRACK MAP MODAL -->
+    <div class="modal fade" id="trackerModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 overflow-hidden">
+                <div class="modal-header border-0"
+                    style="background: var(--dark); color:white; padding: 1.25rem 1.5rem;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-truck fs-5"></i>
+                        <h5 class="mb-0 fw-bold">Live Pickup Tracking</h5>
+                        <span
+                            style="background:rgba(16,185,129,0.2); color:#34d399; font-size:0.65rem; font-weight:800; padding:0.2rem 0.6rem; border-radius:100px; letter-spacing:1px;">●
+                            LIVE</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0 position-relative">
+                    <div id="trackMap"></div>
+                    <div class="position-absolute bottom-0 start-0 end-0 p-3"
+                        style="background: rgba(255,255,255,0.9); backdrop-filter: blur(10px); z-index:1000;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div
+                                    style="font-size:0.65rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--muted);">
+                                    NGO En Route</div>
+                                <div class="fw-bold" id="trackerNgoName" style="font-size:1rem;">—</div>
+                            </div>
+                            <span
+                                style="background:#d1fae5; color:#065f46; font-size:0.8rem; font-weight:800; padding:0.4rem 1rem; border-radius:100px;">
+                                <i class="bi bi-clock me-1"></i>Est. 15–20 min
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer
+        style="background: var(--dark); color: rgba(255,255,255,0.3); padding: 2rem 0; text-align: center; font-size:0.85rem;">
+        &copy; 2026 DonateWise — Every donation matters.
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let leafMap;
+
+        // ── Known Pune area coordinates lookup (avoids geocoding failures)
+        const PUNE_AREAS = {
+            'kothrud': [18.5074, 73.8077], 'baner': [18.5590, 73.7868],
+            'wakad': [18.5991, 73.7613], 'hinjewadi': [18.5912, 73.7380],
+            'aundh': [18.5600, 73.8089], 'shivajinagar': [18.5313, 73.8476],
+            'koregaon park': [18.5362, 73.8938], 'kalyani nagar': [18.5471, 73.8984],
+            'viman nagar': [18.5679, 73.9143], 'hadapsar': [18.5018, 73.9260],
+            'magarpatta': [18.5162, 73.9269], 'kondhwa': [18.4688, 73.8898],
+            'katraj': [18.4528, 73.8634], 'swargate': [18.5031, 73.8551],
+            'pune': [18.5204, 73.8567], 'fc road': [18.5205, 73.8419],
+            'camp': [18.5180, 73.8789], 'deccan': [18.5195, 73.8369],
+            'pimpri': [18.6279, 73.7997], 'chinchwad': [18.6448, 73.7902],
+            'nigdi': [18.6541, 73.7793], 'bhosari': [18.6477, 73.8451],
+            'yerawada': [18.5532, 73.8945], 'nagar road': [18.5448, 73.9051],
+            'bavdhan': [18.5237, 73.7756], 'sus': [18.5483, 73.7657],
+            'pashan': [18.5408, 73.8025], 'sus road': [18.5483, 73.7657],
+            'warje': [18.4826, 73.8134], 'karve nagar': [18.4942, 73.8215],
+            'bibwewadi': [18.4730, 73.8612], 'vishrantwadi': [18.5900, 73.8945],
+            'lohegaon': [18.5981, 73.9053], 'wagholi': [18.5724, 73.9800],
+            'nibm': [18.4720, 73.8987], 'undri': [18.4601, 73.9012],
+            'pune station': [18.5287, 73.8744], 'sangvi': [18.5843, 73.8150],
+            'pimple saudagar': [18.6068, 73.7963], 'ravet': [18.6507, 73.7605],
+            'talegaon': [18.7289, 73.6754], 'chakan': [18.7596, 73.8612],
+        };
+
+        function lookupArea(str) {
+            if (!str) return null;
+            const s = str.toLowerCase().trim();
+            for (const [key, coords] of Object.entries(PUNE_AREAS)) {
+                if (s.includes(key)) return coords;
+            }
+            return null;
+        }
+
+        async function geocodeOnline(addr) {
+            // Append Pune context for short names
+            const query = addr.toLowerCase().includes('pune') ? addr : addr + ', Pune, Maharashtra, India';
+            try {
+                const r = await fetch(
+                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&countrycodes=in`,
+                    { headers: { 'Accept-Language': 'en' } }
+                );
+                const d = await r.json();
+                if (d && d.length > 0) return [+d[0].lat, +d[0].lon];
+            } catch (e) { }
+            return null;
+        }
+
+        async function resolveLocation(str, fallback) {
+            if (!str || str.trim() === '') return fallback;
+            // 1. Check local lookup table first (instant)
+            const local = lookupArea(str);
+            if (local) return local;
+            // 2. Try online geocoding
+            const online = await geocodeOnline(str);
+            if (online) return online;
+            // 3. Use provided fallback
+            return fallback;
+        }
+
+        async function openTracker(donorLoc, ngoLoc, ngoName) {
+            document.getElementById('trackerNgoName').textContent = ngoName;
+            const modal = new bootstrap.Modal(document.getElementById('trackerModal'));
+            modal.show();
+
+            setTimeout(async () => {
+                if (leafMap) { leafMap.remove(); }
+
+                // ── Build map with CARTO tiles
+                const puneCenter = [18.5204, 73.8567];
+                leafMap = L.map('trackMap', { zoomControl: false }).setView(puneCenter, 13);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap © CARTO'
+                }).addTo(leafMap);
+                L.control.zoom({ position: 'topright' }).addTo(leafMap);
+
+                // ── Fallback positions (meaningfully spread ~3 km apart)
+                const fallbackDonor = [18.5312, 73.8479]; // Shivajinagar
+                const fallbackNgo = [18.5590, 73.8089]; // Aundh
+
+                const donorPos = await resolveLocation(donorLoc, fallbackDonor);
+                const ngoPos = await resolveLocation(ngoLoc, fallbackNgo);
+
+                // ── Icons
+                const homeIcon = L.divIcon({
+                    className: '',
+                    html: `<div style="
+                        width:46px;height:46px;
+                        background:white;
+                        border-radius:50%;
+                        display:flex;align-items:center;justify-content:center;
+                        box-shadow:0 4px 16px rgba(16,185,129,0.4);
+                        border:3px solid #10b981;
+                        font-size:1.4rem;
+                    ">🏠</div>`,
+                    iconSize: [46, 46], iconAnchor: [23, 23]
+                });
+
+                const ngoIcon = L.divIcon({
+                    className: '',
+                    html: `<div style="
+                        width:46px;height:46px;
+                        background:#4f46e5;
+                        border-radius:50%;
+                        display:flex;align-items:center;justify-content:center;
+                        box-shadow:0 4px 16px rgba(79,70,229,0.5);
+                        font-size:1.3rem;
+                    ">🏢</div>`,
+                    iconSize: [46, 46], iconAnchor: [23, 23]
+                });
+
+                const truckIcon = L.divIcon({
+                    className: '',
+                    html: `<div style="
+                        width:46px;height:46px;
+                        background:#f59e0b;
+                        border-radius:50%;
+                        display:flex;align-items:center;justify-content:center;
+                        box-shadow:0 4px 16px rgba(245,158,11,0.5);
+                        font-size:1.3rem;
+                        border:3px solid white;
+                    ">🚚</div>`,
+                    iconSize: [46, 46], iconAnchor: [23, 23]
+                });
+
+                // ── Place markers
+                L.marker(donorPos, { icon: homeIcon }).addTo(leafMap)
+                    .bindPopup(`<b style="color:#10b981">📍 Your Pickup Location</b><br><span style="color:#64748b;font-size:0.8rem;">${donorLoc}</span>`);
+
+                L.marker(ngoPos, { icon: ngoIcon }).addTo(leafMap)
+                    .bindPopup(`<b style="color:#4f46e5">🏢 ${ngoName}</b><br><span style="color:#64748b;font-size:0.8rem;">NGO Starting Point</span>`);
+
+                // ── Route line (dashed blue)
+                const route = L.polyline([ngoPos, donorPos], {
+                    color: '#4f46e5',
+                    weight: 4,
+                    dashArray: '10, 8',
+                    opacity: 0.75
+                }).addTo(leafMap);
+
+                // ── Fit map to show both markers with padding
+                leafMap.fitBounds(L.latLngBounds([donorPos, ngoPos]), { padding: [60, 60] });
+
+                // ── Animate truck from NGO → Donor
+                const truck = L.marker(ngoPos, { icon: truckIcon }).addTo(leafMap);
+                let progress = 0;
+                const anim = setInterval(() => {
+                    progress += 0.008;
+                    if (progress >= 1) {
+                        clearInterval(anim);
+                        truck.setLatLng(donorPos);
+                        truck.bindPopup('<b>🎉 Truck Arrived!</b>').openPopup();
+                        return;
+                    }
+                    truck.setLatLng([
+                        ngoPos[0] + (donorPos[0] - ngoPos[0]) * progress,
+                        ngoPos[1] + (donorPos[1] - ngoPos[1]) * progress
+                    ]);
+                }, 60);
+
+            }, 500);
+        }
+    </script>
+</body>
+
+</html>

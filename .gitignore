@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.idea/
+static/uploads/*
+!static/uploads/.gitkeep
+users.db
+app.log
+test_email.py

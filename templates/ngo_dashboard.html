@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>NGO Dashboard | DonateWise</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .page-header {
+            background: #fff;
+            padding: 2rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .page-header h2 {
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .filter-group {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .filter-group select {
+            border-radius: 8px;
+            border-color: #cbd5e1;
+            padding: 0.75rem 1rem;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .ngo-card {
+            border: none;
+            border-left: 6px solid #e2e8f0;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .ngo-card:hover {
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .ngo-card.active {
+            border-left-color: #3b82f6;
+        }
+
+        .ngo-card.claimed {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .ngo-card .card-title {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 1.25rem;
+        }
+
+        .badge-cat {
+            background: #e0e7ff;
+            color: #4338ca;
+            border-radius: 6px;
+            padding: 0.4rem 0.6rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .details {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .ngo-card.active .details {
+            display: block;
+            opacity: 1;
+        }
+
+        .expand-btn {
+            background: #f1f5f9;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .expand-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+
+        .expand-btn i {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .ngo-card.active .expand-btn i {
+            transform: rotate(180deg);
+        }
+
+        /* 🗺️ Radar Map */
+        #radarMap {
+            height: 350px;
+            border-radius: 20px;
+            border: 5px solid white;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            z-index: 1;
+        }
+
+        .radar-badge {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary);
+            border: 1px dashed var(--primary);
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 5px;
+            font-weight: 700;
+        }
+
+        .nearby-highlight {
+            border-left-color: #f59e0b !important;
+            background: #fffbeb !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🌐 Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#"><i class="bi bi-box2-heart-fill me-2"></i>DonateWise NGO</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-toggle="collapse"
+                data-bs-target="#navcol">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navcol">
+                <ul class="navbar-nav ms-auto fw-semibold">
+                    <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('main.home') }}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('main.ngo_needs') }}">Urgent
+                            Needs <span class="badge bg-danger rounded-pill x-small">LIVE</span></a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="{{ url_for('main.history') }}">History</a>
+                    </li>
+                    {% if session.get('ngo_id') %}
+                    <li class="nav-item"><a class="nav-link text-white bg-white bg-opacity-25 rounded px-3 py-2 ms-2"
+                            href="{{ url_for('auth.logout') }}">Logout</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header text-center">
+        <h2><i class="bi bi-building me-2 text-primary"></i>NGO Dashboard</h2>
+        <p class="text-muted mt-2 mb-0">Browse and claim available donations for your organization.</p>
+    </div>
+
+    <div class="container pb-5">
+        {% if ngo.status != 'Approved' %}
+        <div class="alert alert-warning border-0 shadow-sm text-center fw-bold rounded-3 mb-4">
+            <i class="bi bi-lock-fill me-2 fs-5"></i> Your NGO account is <strong>not yet verified</strong> by
+            admin.<br>
+            <span class="fw-normal mt-1 d-block">You'll be able to claim donations once approved.</span>
+        </div>
+        {% endif %}
+
+        <!-- ✅ Flash Message -->
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="alert alert-success border-0 shadow-sm text-center fw-bold rounded-3 mb-4"><i
+                class="bi bi-check-circle-fill me-2"></i>{{ messages[0]|safe }}</div>
+        {% endif %}
+        {% endwith %}
+
+        <!-- 🗺️ LIVE DONATION RADAR -->
+        <div class="fade-in mb-5">
+            <div class="d-flex justify-content-between align-items-end mb-3">
+                <div>
+                    <h4 class="fw-bold mb-0 text-dark">Live Donation Radar</h4>
+                    <p class="text-muted small mb-0">Helping you find items near your area ({{ ngo.location }})</p>
+                </div>
+                <span class="badge bg-primary pulse-blue px-3 py-2 rounded-pill"><i class="bi bi-broadcast me-1"></i>
+                    SCANNING LIVE</span>
+            </div>
+            <div id="radarMap"></div>
+        </div>
+
+        <!-- 🔍 Filters -->
+        <div class="filter-group d-flex flex-column flex-md-row">
+            <select id="filter-category" class="form-select flex-grow-1" onchange="applyFilters()">
+                <option value="all">📦 Category: All</option>
+                {% for category, count in stats.items() %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+            <select id="filter-status" class="form-select flex-grow-1" onchange="applyFilters()">
+                <option value="all">🚦 Pickup Status: All</option>
+                <option value="Pending">🕒 Pending</option>
+                <option value="Approved">✅ Approved</option>
+                <option value="Declined">❌ Declined</option>
+            </select>
+            <select id="filter-rec" class="form-select flex-grow-1" onchange="applyFilters()">
+                <option value="all">⭐ Recommendation: All</option>
+                <option value="true">✅ AI Recommended</option>
+                <option value="false">❌ Not Recommended</option>
+            </select>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0 fw-bold text-dark"><i class="bi bi-gift me-2"></i>Available Donations</h4>
+            <span class="badge bg-dark text-white rounded-pill px-3 py-2">Total: {{ unclaimed|length + claimed|length
+                }}</span>
+        </div>
+
+        <!-- 🧩 Donation Cards -->
+        <div id="donation-container">
+            {% for d in unclaimed + claimed %}
+            <div class="ngo-card p-3 shadow-sm mb-3 {% if d.claimed_by %}claimed{% endif %}"
+                data-cat="{{ d.predicted_category }}" data-status="{{ d.pickup_status or 'Pending' }}"
+                data-rec="{{ d.pickup_recommended }}">
+
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="card-title mb-1">{{ d.title }}</h5>
+                        <span class="badge-cat">{{ d.predicted_category }}</span>
+                        {% if d.is_nearby %}<span class="radar-badge ms-1"><i class="bi bi-geo-fill me-1"></i>Nearby (In
+                            {{ ngo_area.title() }})</span>{% endif %}
+                        {% if d.claimed_by %}<span
+                            class="badge bg-success bg-opacity-25 text-success border border-success rounded-pill ms-2 px-2"><i
+                                class="bi bi-check2-circle me-1"></i>Claimed</span>{% endif %}
+                    </div>
+                    <button class="expand-btn" onclick="toggleCard(this)"><i class="bi bi-chevron-down"></i></button>
+                </div>
+
+                <div class="row small mt-3">
+                    <div class="col-6">
+                        <p><i class="bi bi-person-fill text-muted me-1"></i><strong>Donor:</strong> <br>{{ d.user_name
+                            }}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><i class="bi bi-geo-alt-fill text-danger me-1"></i><strong>Location:</strong> <br>{{
+                            d.location }}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><i class="bi bi-boxes text-info me-1"></i><strong>Quantity:</strong> <br>{{ d.quantity }}</p>
+                    </div>
+                    <div class="col-6">
+                        <p><i class="bi bi-clock-fill text-warning me-1"></i><strong>Time:</strong> <br>{{
+                            d.created_at.strftime('%Y-%m-%d %H:%M') if d.created_at else '' }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-2 pt-2 border-top">
+                    {% if d.pickup_required %}
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success mb-1">Pickup
+                        Expected</span>
+                    {% if d.pickup_recommended %}
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary mb-1"><i
+                            class="bi bi-robot me-1"></i>AI Recommended</span>
+                    {% else %}
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary mb-1">Not
+                        Recommended</span>
+                    {% endif %}
+                    {% else %}
+                    <span class="badge bg-light text-dark border mb-1">Drop-off Setup</span>
+                    {% endif %}
+
+                    <span class="badge bg-dark bg-opacity-10 text-dark border ms-1">{{ d.pickup_status or 'Pending'
+                        }}</span>
+                </div>
+
+                <!-- 🔽 Expandable Details -->
+                <div class="details mt-3 bg-light rounded-3 p-3">
+                    {% if d.pickup_time %}
+                    <p class="small"><strong><i class="bi bi-calendar-event me-1"></i>Preferred Time:</strong> {{
+                        d.pickup_time }}</p>
+                    {% endif %}
+
+                    <div class="row mt-3">
+                        {% if d.image_filename %}
+                        <div class="col-md-6 mb-3">
+                            <strong class="small text-muted d-block mb-1">Photo Attached</strong>
+                            <img src="{{ url_for('static', filename='uploads/' ~ d.image_filename) }}"
+                                class="img-fluid rounded shadow-sm border"
+                                style="max-height:160px; object-fit: cover; width: 100%;">
+                        </div>
+                        {% endif %}
+                        <div class="col-md-{{ '6' if d.image_filename else '12' }} mb-3">
+                            <strong class="small text-muted d-block mb-1">Location Map</strong>
+                            <iframe width="100%" height="160" class="rounded shadow-sm border" loading="lazy"
+                                style="border:0" src="https://www.google.com/maps?q={{ d.location }}&output=embed"
+                                allowfullscreen></iframe>
+                        </div>
+                    </div>
+
+                    <!-- 📥 Claim Interaction -->
+                    {% if not d.claimed_by %}
+                    <div class="mt-3 text-end pt-3 border-top">
+                        <button class="btn btn-primary fw-bold px-4 shadow-sm w-100" data-bs-toggle="modal"
+                            data-bs-target="#claimModal{{ d.id }}"><i class="bi bi-download me-1"></i>Claim This
+                            Donation</button>
+                    </div>
+
+                    <!-- 🧾 Claim Modal -->
+                    <div class="modal fade" id="claimModal{{ d.id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <form method="POST" action="{{ url_for('main.claim_donation') }}" class="w-100">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title"><i class="bi bi-clipboard2-check me-2"></i>Claim
+                                            Donation</h5>
+                                        <button type="button" class="btn-close btn-close-white"
+                                            data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body p-4">
+                                        <p class="fw-bold mb-4">{{ d.title }}</p>
+                                        <input type="hidden" name="donation_id" value="{{ d.id }}">
+                                        <div class="mb-3">
+                                            <label for="pickup_time{{ d.id }}" class="form-label fw-semibold">Planned
+                                                Pickup Time</label>
+                                            <input type="datetime-local" name="pickup_time" id="pickup_time{{ d.id }}"
+                                                class="form-control" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="pickup_notes{{ d.id }}" class="form-label fw-semibold">Pickup
+                                                Notes (optional)</label>
+                                            <textarea name="pickup_notes" id="pickup_notes{{ d.id }}"
+                                                class="form-control" rows="3"
+                                                placeholder="Any special instructions or vehicle info?"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer bg-light">
+                                        <button type="button" class="btn btn-secondary"
+                                            data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-success fw-bold px-4">Confirm
+                                            Claim</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="mt-3 text-start pt-3 border-top">
+                        <p class="text-success mb-0 d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                            <span><strong>Claimed by:</strong> Your NGO <br> <small class="text-muted"><i
+                                        class="bi bi-clock me-1"></i>{{ d.pickup_time }}</small></span>
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 🧠 Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function toggleCard(btn) {
+            const card = btn.closest('.ngo-card');
+            card.classList.toggle('active');
+        }
+
+        function applyFilters() {
+            const cat = document.getElementById('filter-category').value;
+            const status = document.getElementById('filter-status').value;
+            const rec = document.getElementById('filter-rec').value;
+
+            document.querySelectorAll('.ngo-card').forEach(card => {
+                const cardCat = card.getAttribute('data-cat')?.trim();
+                const cardStatus = card.getAttribute('data-status')?.trim();
+                const cardRecRaw = card.getAttribute('data-rec');
+                const cardRec = (cardRecRaw === 'True' || cardRecRaw === 'true');
+
+                const matchCat = (cat === 'all') || (cardCat === cat);
+                const matchStatus = (status === 'all') || (cardStatus === status);
+                const matchRec = (rec === 'all') || ((rec === 'true') === cardRec);
+
+                card.style.display = (matchCat && matchStatus && matchRec) ? 'block' : 'none';
+            });
+        }
+
+        // 🗺️ RADAR MAP LOGIC
+        const map = L.map('radarMap').setView([18.5204, 73.8567], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+        // NGO Location (Mock Marker at Pune Center)
+        L.circle([18.5204, 73.8567], {
+            color: '#2563eb',
+            fillColor: '#2563eb',
+            fillOpacity: 0.1,
+            radius: 5000
+        }).addTo(map).bindPopup("<b>Your Base: {{ ngo.org_name }}</b><br>{{ ngo.location }}");
+
+        // Available items Marker
+        const items = {{ unclaimed | tojson | safe }};
+        items.forEach(item => {
+            const lat = 18.5204 + (Math.random() - 0.5) * 0.08;
+            const lng = 73.8567 + (Math.random() - 0.5) * 0.08;
+
+            const marker = L.marker([lat, lng]).addTo(map)
+                .bindPopup(`
+                    <b>${item.title}</b><br>
+                    Category: ${item.predicted_category}<br>
+                    <button class="btn btn-sm btn-primary mt-2 w-100" onclick="window.scrollTo(0, document.body.scrollHeight)">View Details</button>
+                `);
+
+            // Highlight nearby items
+            if (item.is_nearby) {
+                marker._icon.style.filter = "hue-rotate(140deg) saturate(3)"; // Highlight green/orange
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', applyFilters);
+    </script>
+
+</body>
+
+</html>

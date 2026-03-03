@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Certificate of Kindness | DonateWise</title>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background: #fdfcf9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .certificate-container {
+            max-width: 900px;
+            margin: 50px auto;
+            position: relative;
+            padding: 2px;
+            background: linear-gradient(135deg, #d4af37 0%, #f1e4b3 50%, #d4af37 100%);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.15);
+            border-radius: 5px;
+        }
+
+        .certificate-inner {
+            background: #fff;
+            position: relative;
+            overflow: hidden;
+            border: 20px solid transparent;
+            border-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+            padding: 80px 100px;
+            text-align: center;
+        }
+
+        /* 🏆 Design Elements */
+        .corner-deco {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border: 2px solid #d4af37;
+            opacity: 0.3;
+        }
+
+        .top-left {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .top-right {
+            top: 20px;
+            right: 20px;
+            border-left: none;
+            border-bottom: none;
+        }
+
+        .bottom-left {
+            bottom: 20px;
+            left: 20px;
+            border-right: none;
+            border-top: none;
+        }
+
+        .bottom-right {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            color: #1a1a1a;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: #d4af37;
+            font-size: 1.8rem;
+            margin-bottom: 40px;
+        }
+
+        .donor-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 700;
+            color: #2563eb;
+            text-decoration: underline;
+            text-decoration-color: #d4af37;
+            text-underline-offset: 10px;
+            margin: 20px 0;
+            display: block;
+        }
+
+        .impact-text {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            color: #4b5563;
+            margin-top: 30px;
+        }
+
+        .seal-container {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+        }
+
+        .signature-box {
+            border-top: 2px solid #333;
+            width: 220px;
+            padding-top: 10px;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .gold-seal {
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, #f1e4b3 0%, #d4af37 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            transform: translateY(-20px);
+        }
+
+        .gold-seal::after {
+            content: "VERIFIED";
+            font-size: 12px;
+            font-weight: 800;
+            color: #78350f;
+            border: 2px solid #78350f;
+            padding: 2px 5px;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+            }
+
+            .certificate-container {
+                margin: 0;
+                box-shadow: none;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container py-4 no-print text-center">
+        <button onclick="window.print()" class="btn btn-dark rounded-pill px-5 fw-bold shadow">
+            <i class="bi bi-printer me-2"></i> Download as PDF
+        </button>
+        <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary rounded-pill px-4 ms-2 fw-bold">
+            Back to History
+        </a>
+    </div>
+
+    <div class="certificate-container">
+        <div class="certificate-inner shadow-lg">
+            <div class="corner-deco top-left"></div>
+            <div class="corner-deco top-right"></div>
+            <div class="corner-deco bottom-left"></div>
+            <div class="corner-deco bottom-right"></div>
+
+            <img src="https://cdn-icons-png.flaticon.com/512/3112/3112946.png" width="80" class="mb-4">
+
+            <h1>CERTIFICATE</h1>
+            <h2>OF HONOR & KINDNESS</h2>
+
+            <p class="impact-text text-uppercase fw-bold letter-spacing-2 m-0 mt-4">Proudly presented to</p>
+            <span class="donor-name">{{ donation.donor_name }}</span>
+
+            <p class="impact-text">
+                For their exceptional contribution of <b>{{ donation.quantity }} units of {{ donation.predicted_category
+                    }}</b><br>
+                successfully delivered to <b>{{ donation.ngo_name or 'Community in Need' }}</b>.<br>
+                Your generosity has paved a path for a better, kinder world.
+            </p>
+
+            <div class="seal-container">
+                <div class="signature-box">
+                    <p class="mb-0">DONATEWISE TEAM</p>
+                    <small class="text-muted">Digital Verification Head</small>
+                </div>
+
+                <div class="gold-seal">
+                    <div class="seal-ribbon"></div>
+                </div>
+
+                <div class="signature-box">
+                    <p class="mb-0">DATE: {{ donation.created_at.strftime('%d %B %Y') }}</p>
+                    <small class="text-muted">Impact Code: #DW-{{ donation.id }}</small>
+                </div>
+            </div>
+
+            <div class="mt-5 pt-4 opacity-50 small">
+                <p>ID: {{ donation.id }} | Verify at: donatewise.global/verify</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

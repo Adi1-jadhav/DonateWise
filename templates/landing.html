@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>DonateWise — The Future of Giving</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description"
+        content="DonateWise — AI-powered donation platform connecting donors with NGOs in real-time.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --primary-dark: #3730a3;
+            --secondary: #06b6d4;
+            --green: #10b981;
+            --orange: #f59e0b;
+            --rose: #f43f5e;
+            --dark: #0f172a;
+            --text: #1e293b;
+            --muted: #64748b;
+            --border: #e2e8f0;
+            --surface: #f8fafc;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f8fafc;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ─── NAVBAR ─── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 1rem 0;
+            transition: all 0.4s;
+        }
+
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary) !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-link {
+            font-weight: 600;
+            color: var(--muted) !important;
+            padding: 0.5rem 1rem !important;
+            border-radius: 10px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .nav-link:hover,
+        .nav-link.active-link {
+            color: var(--primary) !important;
+            background: rgba(79, 70, 229, 0.07);
+        }
+
+        .nav-badge {
+            background: var(--rose);
+            color: white;
+            font-size: 0.6rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 100px;
+            font-weight: 700;
+            vertical-align: top;
+            margin-left: 3px;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .btn-logout-nav {
+            background: #fff1f2;
+            color: var(--rose) !important;
+            border: 1px solid #fecdd3;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .btn-logout-nav:hover {
+            background: #ffe4e6;
+        }
+
+        /* ─── HERO ─── */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(160deg, #f0f4ff 0%, #eff6ff 40%, #ecfdf5 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 100px 0 60px;
+        }
+
+        .hero-bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .orb-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(79, 70, 229, 0.15) 0%, transparent 70%);
+            top: -100px;
+            right: -100px;
+            animation: orb-float 12s ease-in-out infinite alternate;
+        }
+
+        .orb-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, transparent 70%);
+            bottom: -50px;
+            left: -50px;
+            animation: orb-float 8s ease-in-out infinite alternate-reverse;
+        }
+
+        .orb-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%);
+            top: 50%;
+            left: 40%;
+            animation: orb-float 15s ease-in-out infinite alternate;
+        }
+
+        @keyframes orb-float {
+            from {
+                transform: translate(0, 0) scale(1);
+            }
+
+            to {
+                transform: translate(30px, -30px) scale(1.1);
+            }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(79, 70, 229, 0.08);
+            border: 1px solid rgba(79, 70, 229, 0.2);
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            padding: 0.5rem 1.25rem;
+            border-radius: 100px;
+            margin-bottom: 2rem;
+        }
+
+        .hero-title {
+            font-size: clamp(3rem, 6vw, 5.5rem);
+            font-weight: 900;
+            letter-spacing: -3px;
+            line-height: 1;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(90deg, var(--primary) 0%, #0ea5e9 50%, var(--green) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-desc {
+            font-size: 1.25rem;
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 550px;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-hero-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white !important;
+            padding: 1rem 2.5rem;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1.05rem;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 16px 40px -10px rgba(79, 70, 229, 0.5);
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 24px 50px -10px rgba(79, 70, 229, 0.6);
+            color: white !important;
+        }
+
+        .btn-hero-secondary {
+            background: white;
+            color: var(--text) !important;
+            padding: 1rem 2.5rem;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            border: 1.5px solid var(--border);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+        }
+
+        .btn-hero-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary);
+            color: var(--primary) !important;
+        }
+
+        .hero-badge-row {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 3rem;
+            align-items: center;
+        }
+
+        .hero-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--muted);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* ─── FLOATING CARDS (Hero Visual) ─── */
+        .hero-visual {
+            position: relative;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .float-card {
+            position: absolute;
+            background: white;
+            border-radius: 20px;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            animation: float 4s ease-in-out infinite;
+            white-space: nowrap;
+        }
+
+        .float-card:nth-child(1) {
+            top: 10%;
+            left: -10%;
+            animation-delay: 0s;
+        }
+
+        .float-card:nth-child(2) {
+            top: 20%;
+            right: 5%;
+            animation-delay: 1.5s;
+        }
+
+        .float-card:nth-child(3) {
+            bottom: 25%;
+            left: 5%;
+            animation-delay: 0.8s;
+        }
+
+        .float-card:nth-child(4) {
+            bottom: 10%;
+            right: -5%;
+            animation-delay: 2.2s;
+        }
+
+        .float-card:nth-child(5) {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            font-size: 3rem;
+            padding: 2rem;
+            border: none;
+            border-radius: 32px;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-12px);
+            }
+        }
+
+        /* ─── STATS STRIP ─── */
+        .stats-strip {
+            background: white;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 2.5rem 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            position: relative;
+        }
+
+        .stat-item+.stat-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10%;
+            height: 80%;
+            width: 1px;
+            background: var(--border);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin-top: 0.5rem;
+        }
+
+        /* ─── HOW IT WORKS ─── */
+        .how-section {
+            background: var(--dark);
+            color: white;
+            padding: 100px 0;
+        }
+
+        .how-step {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .step-number {
+            width: 56px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            color: var(--primary-light);
+        }
+
+        /* ─── URGENT NEEDS ─── */
+        .needs-section {
+            padding: 80px 0;
+            background: #f8fafc;
+        }
+
+        .needs-card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 1.75rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .needs-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .needs-card.high::after {
+            background: linear-gradient(90deg, #f43f5e, #fb7185);
+        }
+
+        .needs-card.medium::after {
+            background: linear-gradient(90deg, #f59e0b, #fbbf24);
+        }
+
+        .needs-card.low::after {
+            background: linear-gradient(90deg, #6366f1, #818cf8);
+        }
+
+        .needs-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.12);
+            border-color: rgba(79, 70, 229, 0.25);
+        }
+
+        .needs-icon-wrap {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .needs-title {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .needs-ngo {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .needs-desc {
+            font-size: 0.9rem;
+            color: var(--muted);
+            line-height: 1.6;
+            flex-grow: 1;
+            margin-bottom: 1.25rem;
+        }
+
+        /* ─── CITY DASHBOARD ─── */
+        .dashboard-section {
+            background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
+            padding: 100px 0;
+            color: white;
+        }
+
+        .dashboard-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2rem;
+        }
+
+        #impactMap {
+            height: 420px;
+            border-radius: 20px;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .leaderboard-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.2s;
+        }
+
+        .leaderboard-row:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(6px);
+        }
+
+        .rank-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .rank-1 {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+        }
+
+        .rank-2 {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            color: #475569;
+        }
+
+        .rank-3 {
+            background: linear-gradient(135deg, #fff7ed, #fed7aa);
+            color: #7c2d12;
+        }
+
+        .rank-other {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* ─── QUICK ACTIONS ─── */
+        .actions-section {
+            padding: 80px 0;
+            background: white;
+        }
+
+        .action-tile {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 28px;
+            padding: 2.5rem 2rem;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            height: 100%;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .action-tile:hover {
+            background: white;
+            border-color: var(--primary);
+            box-shadow: 0 25px 60px -15px rgba(79, 70, 229, 0.15);
+            transform: translateY(-10px);
+            color: inherit;
+        }
+
+        .tile-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+
+        .tile-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+
+        .tile-desc {
+            font-size: 0.95rem;
+            color: var(--muted);
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .tile-cta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--primary);
+            transition: gap 0.3s;
+        }
+
+        .action-tile:hover .tile-cta {
+            gap: 1rem;
+        }
+
+        /* ─── SECTION UTILS ─── */
+        .section-eyebrow {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 900;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ─── ACTIVITY FEED ─── */
+        .activity-section {
+            padding: 60px 0;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1.25rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            transition: all 0.25s;
+            background: #fafafa;
+        }
+
+        .activity-item:hover {
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            transform: translateX(4px);
+        }
+
+        .act-icon {
+            font-size: 1.25rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            flex-shrink: 0;
+        }
+
+        .act-tag {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.2rem 0.6rem;
+            border-radius: 100px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        /* Notification Bell */
+        .notif-bell {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            color: #64748b !important;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .notif-bell:hover {
+            background: #f1f5f9;
+            color: #1e293b !important;
+        }
+
+        .notif-dot {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 18px;
+            height: 18px;
+            background: #f43f5e;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 900;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid white;
+            animation: pulse-notif 2s infinite;
+        }
+
+        @keyframes pulse-notif {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.15);
+            }
+        }
+
+        .notif-dropdown {
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12);
+            overflow: hidden;
+        }
+
+        .notif-header {
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .notif-body {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .notif-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            text-decoration: none;
+            color: inherit;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
+        }
+
+        .notif-item:hover {
+            background: #f8fafc;
+        }
+
+        .notif-item:last-child {
+            border: none;
+        }
+
+        .notif-emoji {
+            font-size: 1.4rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+            flex-shrink: 0;
+        }
+
+        .notif-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--dark);
+        }
+
+        .notif-body-text {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.4;
+            margin-top: 0.15rem;
+        }
+
+        .notif-chip {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        /* ─── FOOTER ─── */
+        footer {
+            background: var(--dark);
+            color: rgba(255, 255, 255, 0.5);
+            padding: 3rem 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ─── NAVBAR ─── -->
+    <nav class="navbar navbar-expand-lg" id="mainNav">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
+                <i class="bi bi-box2-heart-fill"></i> DonateWise
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <i class="bi bi-list fs-4"></i>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navMenu">
+                <ul class="navbar-nav align-items-center gap-1">
+                    <li class="nav-item"><a class="nav-link active-link" href="{{ url_for('main.home') }}"><i
+                                class="bi bi-house me-1"></i>Home</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.needs_board') }}">
+                            <i class="bi bi-broadcast me-1"></i>Live Needs
+                            <span class="nav-badge">LIVE</span>
+                        </a>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.donate') }}"><i
+                                class="bi bi-plus-circle me-1"></i>Donate</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.history') }}"><i
+                                class="bi bi-clock-history me-1"></i>My Impact</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('main.profile') }}"><i
+                                class="bi bi-person-circle me-1"></i>My Profile</a></li>
+
+                    <!-- 🔔 NOTIFICATION BELL -->
+                    <li class="nav-item dropdown ms-1">
+                        <a class="nav-link notif-bell position-relative" href="#" id="notifBell"
+                            data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button">
+                            <i class="bi bi-bell-fill" style="font-size:1.1rem;"></i>
+                            {% if notif_count > 0 %}
+                            <span class="notif-dot" id="notifCount">{{ notif_count }}</span>
+                            {% else %}
+                            <span class="notif-dot d-none" id="notifCount">0</span>
+                            {% endif %}
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-end notif-dropdown p-0"
+                            style="width:340px; min-width:340px;">
+                            <div class="notif-header d-flex justify-content-between align-items-center px-4 py-3">
+                                <span class="fw-bold" style="font-size:0.95rem;">Notifications</span>
+                                <a href="{{ url_for('main.history') }}" class="text-primary fw-semibold"
+                                    style="font-size:0.8rem; text-decoration:none;">View All</a>
+                            </div>
+                            <div class="notif-body" id="notifList">
+                                {% if notifications %}
+                                {% for n in notifications %}
+                                <a href="{{ url_for('main.history') }}" class="notif-item">
+                                    <span class="notif-emoji">{{ n.icon }}</span>
+                                    <div class="flex-grow-1">
+                                        <div class="notif-title">{{ n.title }}</div>
+                                        <div class="notif-body-text">{{ n.body | safe }}</div>
+                                    </div>
+                                    <div class="notif-chip" style="background: {{ n.color }}15; color: {{ n.color }};">
+                                        <i class="bi bi-circle-fill" style="font-size:0.4rem;"></i>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                                {% else %}
+                                <div class="text-center py-5" style="color:#94a3b8;">
+                                    <i class="bi bi-bell-slash d-block fs-2 mb-2"></i>
+                                    <span style="font-size:0.85rem;">All caught up! No new updates.</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="nav-item ms-2">
+                        <a class="nav-link btn-logout-nav rounded-pill px-3" href="{{ url_for('auth.logout') }}">
+                            <i class="bi bi-box-arrow-right me-1"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─── HERO ─── -->
+    <section class="hero">
+        <div class="hero-bg-orb orb-1"></div>
+        <div class="hero-bg-orb orb-2"></div>
+        <div class="hero-bg-orb orb-3"></div>
+
+        <div class="container">
+            <div class="row align-items-center gy-5">
+                <div class="col-lg-6 hero-content">
+                    <div class="hero-eyebrow">
+                        <i class="bi bi-stars"></i> AI-Powered Donation Platform
+                    </div>
+                    <h1 class="hero-title">
+                        Turn Things<br>Into <span class="gradient-text">Hope.</span>
+                    </h1>
+                    <p class="hero-desc">
+                        Our intelligent platform connects your unused belongings to people who need them most —
+                        instantly, smartly, and with full transparency.
+                    </p>
+                    <div class="hero-cta-group">
+                        <a href="{{ url_for('main.donate') }}" class="btn-hero-primary">
+                            <i class="bi bi-gift-fill"></i> Start Donating
+                        </a>
+                        <a href="{{ url_for('main.needs_board') }}" class="btn-hero-secondary">
+                            <i class="bi bi-broadcast text-danger"></i> View Live Needs
+                        </a>
+                    </div>
+                    <div class="hero-badge-row">
+                        <div class="hero-badge"><span class="dot bg-success"></span> AI Category Detection</div>
+                        <div class="hero-badge"><span class="dot bg-primary"></span> Real-Time Tracking</div>
+                        <div class="hero-badge"><span class="dot bg-warning"></span> Impact Certificates</div>
+                    </div>
+                </div>
+                <div class="col-lg-6 d-none d-lg-block">
+                    <div class="hero-visual">
+                        <div class="float-card">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-4">🎒</span>
+                                <div>
+                                    <div class="fw-bold small">New Donation</div>
+                                    <div class="text-muted" style="font-size:0.75rem">School Bag • Clothes</div>
+                                </div>
+                                <span class="ms-3 badge bg-success">✓ Matched</span>
+                            </div>
+                        </div>
+                        <div class="float-card">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-robot text-primary fs-4"></i>
+                                <div>
+                                    <div class="fw-bold small">AI Detection</div>
+                                    <div class="text-success fw-bold" style="font-size:0.75rem">95% Confidence</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="float-card">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-truck text-info fs-4"></i>
+                                <div>
+                                    <div class="fw-bold small">NGO On The Way</div>
+                                    <div class="text-muted" style="font-size:0.75rem">Seva Foundation • 2.3 km</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="float-card">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-award-fill text-warning fs-4"></i>
+                                <div>
+                                    <div class="fw-bold small">Certificate Earned!</div>
+                                    <div class="text-muted" style="font-size:0.75rem">Impact: 35 items</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="float-card">
+                            <i class="bi bi-heart-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── STATS STRIP ─── -->
+    <div class="stats-strip">
+        <div class="container">
+            <div class="row">
+                <div class="col-4 stat-item">
+                    <div class="stat-number counter" data-target="{{ impact_stats.total_items or 0 }}">0</div>
+                    <div class="stat-label">Items Shared</div>
+                </div>
+                <div class="col-4 stat-item">
+                    <div class="stat-number counter" data-target="{{ impact_stats.donation_count or 0 }}">0</div>
+                    <div class="stat-label">Verified Donations</div>
+                </div>
+                <div class="col-4 stat-item">
+                    <div class="stat-number counter" data-target="24">0</div>
+                    <div class="stat-label">Lives Touched Daily</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── LIVE ACTIVITY FEED ─── -->
+    <section class="activity-section">
+        <div class="container">
+            <div class="row align-items-center mb-4">
+                <div class="col">
+                    <div class="section-eyebrow">Platform Activity</div>
+                    <h2 class="fw-bold mb-0" style="font-size:1.75rem; letter-spacing:-1px;">Live Activity Feed</h2>
+                </div>
+                <div class="col-auto">
+                    <span
+                        style="background:#fee2e2; color:#ef4444; border-radius:100px; padding:0.4rem 1rem; font-size:0.75rem; font-weight:800; letter-spacing:0.5px;">
+                        ● In Real-Time
+                    </span>
+                </div>
+            </div>
+            <div class="row g-3" id="activityFeed">
+                {% for event in activity_feed %}
+                <div class="col-md-6">
+                    <div class="activity-item">
+                        <div class="act-icon">{{ event.icon }}</div>
+                        <div class="flex-grow-1" style="font-size:0.9rem; color: #1e293b;">{{ event.text | safe }}</div>
+                        <span class="act-tag"
+                            style="background: {{ event.color }}18; color: {{ event.color }}; border: 1px solid {{ event.color }}30;">{{
+                            event.tag }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12 text-center py-4 opacity-50">
+                    <i class="bi bi-activity fs-1 d-block mb-2"></i>
+                    <p class="text-muted">Feed is loading as donations come in...</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <section class="how-section">
+        <div class="container">
+            <div class="text-center mb-5 reveal">
+                <div class="section-eyebrow" style="color: #818cf8;">How It Works</div>
+                <h2 class="section-title text-white">Give in <span style="color: #818cf8">3 Simple Steps</span></h2>
+                <p style="color: rgba(255,255,255,0.5); margin-top: 1rem;">Our AI handles the complexity. You just show
+                    up with kindness.</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4 reveal" style="transition-delay: 0.1s;">
+                    <div class="how-step">
+                        <div class="step-number"><i class="bi bi-camera-fill"></i></div>
+                        <h3 class="text-white fw-bold mt-3 mb-2">Upload & Describe</h3>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.95rem; line-height: 1.7;">Snap a photo or
+                            type a description. Our AI instantly reads it and identifies the category and condition.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal" style="transition-delay: 0.2s;">
+                    <div class="how-step">
+                        <div class="step-number"><i class="bi bi-robot"></i></div>
+                        <h3 class="text-white fw-bold mt-3 mb-2">AI Matches Instantly</h3>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.95rem; line-height: 1.7;">The platform
+                            connects your donation to a verified NGO in your city that needs exactly what you have.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 reveal" style="transition-delay: 0.3s;">
+                    <div class="how-step">
+                        <div class="step-number"><i class="bi bi-award-fill"></i></div>
+                        <h3 class="text-white fw-bold mt-3 mb-2">Track & Get Certified</h3>
+                        <p style="color: rgba(255,255,255,0.5); font-size: 0.95rem; line-height: 1.7;">Watch your
+                            donation journey in real-time, and receive an Impact Certificate when it's delivered.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── URGENT NEEDS ─── -->
+    {% if active_needs %}
+    <section class="needs-section">
+        <div class="container">
+            <div class="row align-items-end mb-5 reveal">
+                <div class="col-lg-8">
+                    <div class="section-eyebrow">Live Matching Engine</div>
+                    <h2 class="section-title">Fulfill <span style="color: var(--rose)">Urgent Needs</span><br>Right Now
+                    </h2>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <a href="{{ url_for('main.needs_board') }}"
+                        class="btn btn-outline-danger rounded-pill px-4 fw-bold">
+                        <i class="bi bi-broadcast me-2"></i>View All Needs
+                    </a>
+                </div>
+            </div>
+            <div class="row g-4">
+                {% for need in active_needs[:3] %}
+                <div class="col-md-4 reveal" style="transition-delay: {{ loop.index0 * 0.1 }}s;">
+                    <div class="needs-card {{ need.priority|lower }}">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="needs-icon-wrap"
+                                style="background: {% if need.priority == 'High' %}#fee2e2; color: #ef4444;{% elif need.priority == 'Medium' %}#fef3c7; color: #f59e0b;{% else %}#ede9fe; color: #7c3aed;{% endif %}">
+                                {% if need.category == 'Food' %}<i class="bi bi-egg-fried"></i>
+                                {% elif need.category == 'Clothes' %}<i class="bi bi-universal-access"></i>
+                                {% elif need.category == 'Books' %}<i class="bi bi-book"></i>
+                                {% elif need.category == 'Electronics' %}<i class="bi bi-cpu"></i>
+                                {% elif need.category == 'Medical' %}<i class="bi bi-bandaid"></i>
+                                {% elif need.category == 'Furniture' %}<i class="bi bi-lamp"></i>
+                                {% else %}<i class="bi bi-gift"></i>{% endif %}
+                            </div>
+                            <span class="badge rounded-pill"
+                                style="font-size:0.7rem; font-weight:700; {% if need.priority == 'High' %}background:#fee2e2; color:#ef4444;{% elif need.priority == 'Medium' %}background:#fef3c7; color:#d97706;{% else %}background:#ede9fe; color:#7c3aed;{% endif %}">
+                                {{ need.priority }} Priority
+                            </span>
+                        </div>
+                        <h5 class="needs-title">{{ need.item_name }}</h5>
+                        <div class="needs-ngo"><i class="bi bi-building me-1"></i>{{ need.org_name }}</div>
+                        <p class="needs-desc">"{{ need.description[:100] }}..."</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold" style="font-size: 1.1rem;">{{ need.quantity }} <small
+                                    class="fw-normal text-muted">needed</small></span>
+                            <a href="{{ url_for('main.donate') }}"
+                                class="btn btn-sm btn-primary rounded-pill px-3 fw-bold">Donate Now</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- ─── CITY KINDNESS DASHBOARD ─── -->
+    <section class="dashboard-section">
+        <div class="container">
+            <div class="text-center mb-5 reveal">
+                <div class="section-eyebrow" style="color: #818cf8;">City Intelligence</div>
+                <h2 class="section-title text-white">The <span style="color: #818cf8">Kindness Dashboard</span></h2>
+                <p style="color: rgba(255,255,255,0.4); margin-top: 1rem;">Every marker is a real act of generosity in
+                    your city.</p>
+            </div>
+
+            <div class="row g-4 align-items-start">
+                <div class="col-lg-7 reveal">
+                    <div class="dashboard-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="text-white fw-bold mb-0"><i class="bi bi-map me-2"></i>Live Donation Map</h5>
+                            <span
+                                style="background: rgba(244,63,94,0.2); color: #f87171; border-radius: 100px; padding: 0.3rem 0.8rem; font-size: 0.75rem; font-weight: 700;">
+                                ● LIVE
+                            </span>
+                        </div>
+                        <div id="impactMap"></div>
+                    </div>
+                </div>
+                <div class="col-lg-5">
+                    <div class="dashboard-card reveal" style="transition-delay: 0.2s;">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="text-white fw-bold mb-0"><i class="bi bi-trophy me-2 text-warning"></i>Top Kind
+                                Souls</h5>
+                            <span
+                                style="background: rgba(79,70,229,0.3); color: var(--primary-light); border-radius: 100px; padding: 0.25rem 0.75rem; font-size: 0.7rem; font-weight: 700;">THIS
+                                MONTH</span>
+                        </div>
+
+                        <div class="d-flex flex-column gap-3">
+                            {% if top_donors %}
+                            {% for hero in top_donors %}
+                            <div class="leaderboard-row">
+                                <div
+                                    class="rank-badge {% if loop.index <= 3 %}rank-{{ loop.index }}{% else %}rank-other{% endif %}">
+                                    {% if loop.index == 1 %}👑{% else %}{{ loop.index }}{% endif %}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="text-white fw-bold" style="font-size: 0.95rem;">{{ hero.name }}</div>
+                                    <div style="color: rgba(255,255,255,0.4); font-size: 0.8rem;">{{ hero.count }}
+                                        donation{% if hero.count != 1 %}s{% endif %}</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="text-warning fw-bold" style="font-size: 1rem;">{{ (hero.total_qty | int)
+                                        }}</div>
+                                    <div style="color: rgba(255,255,255,0.35); font-size: 0.7rem;">items</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="text-center py-5" style="color: rgba(255,255,255,0.3);">
+                                <i class="bi bi-award fs-1 d-block mb-3"></i>
+                                <p>Be the first to earn the top spot!</p>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mt-4 pt-3" style="border-top: 1px solid rgba(255,255,255,0.08);">
+                            <p style="color: rgba(255,255,255,0.3); font-size: 0.8rem; margin: 0;">
+                                <i class="bi bi-info-circle me-1"></i> Ranked by total items successfully delivered.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── QUICK ACTIONS ─── -->
+    <section class="actions-section">
+        <div class="container">
+            <div class="text-center mb-5 reveal">
+                <div class="section-eyebrow">Quick Actions</div>
+                <h2 class="section-title">Your Action Center</h2>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-4 reveal" style="transition-delay: 0.1s;">
+                    <a href="{{ url_for('main.donate') }}" class="action-tile">
+                        <div class="tile-icon" style="background: #ede9fe; color: var(--primary);">
+                            <i class="bi bi-plus-circle-fill"></i>
+                        </div>
+                        <div class="tile-title">New Donation</div>
+                        <div class="tile-desc">Upload a photo and let our AI automatically categorize and match your
+                            item to someone in need.</div>
+                        <div class="tile-cta"><span>Start Donating</span> <i class="bi bi-arrow-right"></i></div>
+                    </a>
+                </div>
+                <div class="col-md-4 reveal" style="transition-delay: 0.2s;">
+                    <a href="{{ url_for('main.history') }}" class="action-tile">
+                        <div class="tile-icon" style="background: #d1fae5; color: var(--green);">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div class="tile-title">Track My Impact</div>
+                        <div class="tile-desc">Watch your donations travel in real-time. See exactly when an NGO picks
+                            them up and delivers them.</div>
+                        <div class="tile-cta" style="color: var(--green);"><span>View History</span> <i
+                                class="bi bi-arrow-right"></i></div>
+                    </a>
+                </div>
+                <div class="col-md-4 reveal" style="transition-delay: 0.3s;">
+                    <a href="{{ url_for('main.needs_board') }}" class="action-tile">
+                        <div class="tile-icon" style="background: #fff1f2; color: var(--rose);">
+                            <i class="bi bi-broadcast"></i>
+                        </div>
+                        <div class="tile-title">Live Needs Board</div>
+                        <div class="tile-desc">Browse direct requests from NGOs in your city. Donate exactly what they
+                            need, when they need it.</div>
+                        <div class="tile-cta" style="color: var(--rose);"><span>View Board</span> <i
+                                class="bi bi-arrow-right"></i></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer>
+        <div class="container text-center">
+            <div class="mb-3" style="font-size: 1.5rem; font-weight: 800; color: white;">
+                <i class="bi bi-box2-heart-fill" style="color: var(--primary-light);"></i> DonateWise
+            </div>
+            <p>&copy; 2026 DonateWise. Built with <i class="bi bi-heart-fill" style="color: var(--rose);"></i> for the
+                community of Pune.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ── Navbar scroll effect
+        const nav = document.getElementById('mainNav');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // ── Scroll-triggered reveal
+        const reveals = document.querySelectorAll('.reveal');
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('visible');
+                    io.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        reveals.forEach(r => io.observe(r));
+
+        // ── Count-up animation
+        const statsObserver = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) {
+                document.querySelectorAll('.counter').forEach(el => {
+                    const target = +el.getAttribute('data-target');
+                    const step = () => {
+                        const current = +el.innerText.replace(/[+,]/g, '');
+                        const inc = Math.max(1, Math.ceil(target / 120));
+                        if (current < target) {
+                            el.innerText = Math.min(current + inc, target).toLocaleString();
+                            requestAnimationFrame(step);
+                        } else {
+                            el.innerText = target.toLocaleString() + '+';
+                        }
+                    };
+                    step();
+                });
+                statsObserver.disconnect();
+            }
+        }, { threshold: 0.5 });
+
+        const statsStrip = document.querySelector('.stats-strip');
+        if (statsStrip) statsObserver.observe(statsStrip);
+
+        // ── Leaflet Map
+        const map = L.map('impactMap', { zoomControl: false }).setView([18.5204, 73.8567], 12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap © CARTO'
+        }).addTo(map);
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
+        const mapData = {{ map_data | tojson | safe }};
+        const catColors = {
+            'Food': '#10b981', 'Clothes': '#3b82f6', 'Books': '#f59e0b',
+            'Electronics': '#6366f1', 'Medical': '#f43f5e', 'Furniture': '#8b5cf6',
+            'default': '#64748b'
+        };
+
+        mapData.forEach(item => {
+            const jLat = (Math.random() - 0.5) * 0.05;
+            const jLng = (Math.random() - 0.5) * 0.05;
+            const color = catColors[item.category] || catColors.default;
+
+            const icon = L.divIcon({
+                className: '',
+                html: `<div style="width:14px;height:14px;background:${color};border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>`,
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+
+            L.marker([18.5204 + jLat, 73.8567 + jLng], { icon }).addTo(map)
+                .bindPopup(`<b style="color:${color}">${item.category}</b><br>${item.title}<br>
+                    <span class="text-muted small">${item.status}</span>`);
+        });
+
+        // ── 🔔 Live Notification Polling (every 60s)
+        function pollNotifications() {
+            fetch('/api/notifications')
+                .then(r => r.json())
+                .then(data => {
+                    const badge = document.getElementById('notifCount');
+                    if (!badge) return;
+                    const count = data.count || 0;
+                    badge.textContent = count;
+                    if (count > 0) {
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                })
+                .catch(() => { }); // fail silently
+        }
+        // Poll every 60 seconds
+        setInterval(pollNotifications, 60000);
+
+        // ── ✅ Toast on page load if there are notifications
+        const notifCount = {{ notif_count }};
+        if (notifCount > 0) {
+            // Show a soft toast in the bottom-right corner
+            const toast = document.createElement('div');
+            toast.innerHTML = `
+                <div style="
+                    position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+                    background: white; border-radius: 16px; padding: 1rem 1.25rem;
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.12); border: 1px solid #e2e8f0;
+                    display: flex; align-items: center; gap: 0.75rem;
+                    animation: slideInRight 0.5s ease-out;
+                    max-width: 320px;
+                " id="notifToast">
+                    <span style="font-size:1.5rem;">🔔</span>
+                    <div>
+                        <div style="font-weight:700; font-size:0.9rem; color:#1e293b;">You have ${notifCount} update${notifCount > 1 ? 's' : ''}!</div>
+                        <div style="font-size:0.8rem; color:#64748b;">Your donations have new activity.</div>
+                    </div>
+                    <button onclick="this.closest('#notifToast').remove()"
+                        style="background:none; border:none; font-size:1.1rem; color:#94a3b8; cursor:pointer; margin-left:auto;">&times;</button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            // Auto-dismiss after 5s
+            setTimeout(() => { const el = document.getElementById('notifToast'); if (el) el.remove(); }, 5000);
+        }
+
+        // inject slide-in animation
+        const notifStyle = document.createElement('style');
+        notifStyle.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(notifStyle);
+    </script>
+</body>
+
+</html>
